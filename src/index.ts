@@ -46,15 +46,18 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
 
   let dynamicLandscapeWidth = opts.landscapeWidth;
   let dynamicViewPortWidth = opts.viewportWidth;
-  let cacheComment = null;
+  let cacheComment = new Set<ChildNode>();
   
   const landscapeRules: Rule[] = [];
   // 更新宽度，到下一个注释之前，rule都修改为动态宽度
   const updateDynamicWidth = (r: Rule) => {
     const index = r.parent?.nodes.findIndex(n => n === r)
     const comment = r.parent?.nodes.slice(0, index).reverse().find(item => item.type === "comment" && (landscapeWidthComment.test(item.text) || viewPortWidthComment.test(item.text)))
+    // 如果未匹配到注释
+    if (!comment) return
     // 如果注释未变化，则不更新
-    if (cacheComment && cacheComment === comment) return
+    if (comment && cacheComment.has(comment)) return
+    cacheComment.add(comment)
     if (comment && comment.type === "comment") {
       if (landscapeWidthComment.test(comment.text)) {
         const [_, width] = landscapeWidthComment.exec(comment.text) || [];
@@ -195,6 +198,9 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
         });
         root.append(landscapeRoot);
       }
+
+      // 清空注释
+      cacheComment.forEach(c => c.remove())
     },
   };
 }
