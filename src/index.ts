@@ -47,6 +47,8 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
   let dynamicLandscapeWidth = opts.landscapeWidth;
   let dynamicViewPortWidth = opts.viewportWidth;
   let cacheComment = new Set<ChildNode>();
+  let curentVwComment: ChildNode | undefined = undefined;
+  let curentLwComment: ChildNode | undefined = undefined;
   
   const landscapeRules: Rule[] = [];
   
@@ -67,14 +69,19 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
     // 如果未匹配到注释
     if (!comment) return
     // 如果注释未变化，则不更新
-    if (comment && cacheComment.has(comment)) return
-    cacheComment.add(comment)
+    if (curentVwComment == comment || curentLwComment == comment) return
+    if (comment && !cacheComment.has(comment)) {
+      cacheComment.add(comment)
+    }
+    
     if (comment && comment.type === "comment") {
       if (landscapeWidthComment.test(comment.text)) {
+        curentLwComment = comment
         const [_, width] = landscapeWidthComment.exec(comment.text) || [];
         dynamicLandscapeWidth = Number(width) ?? dynamicLandscapeWidth;
       }
       if (viewPortWidthComment.test(comment.text)) {
+        curentVwComment = comment
         const [_, width] = viewPortWidthComment.exec(comment.text) || [];
         dynamicViewPortWidth = Number(width) ?? dynamicViewPortWidth;
       }
@@ -212,6 +219,7 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
 
       // 清空注释
       cacheComment.forEach(c => c.remove())
+      cacheComment.clear();
     },
   };
 }
