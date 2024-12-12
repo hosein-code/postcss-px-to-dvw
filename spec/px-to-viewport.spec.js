@@ -4,10 +4,11 @@
 
 /* global describe, it, expect */
 
-var postcss = require('postcss');
-var pxToViewport = require('..');
+import pxToViewport from '../dist/index'
+import postcss from 'postcss'
+import { filterPropList } from '../dist/prop-list-matcher'
+
 var basicCSS = '.rule { font-size: 15px }';
-var { filterPropList } = require('../src/prop-list-matcher');
 
 describe('px-to-viewport', function() {
   it('should work on the readme example', function () {

@@ -1,52 +1,52 @@
-var filterPropList = {
-  exact: function (list) {
+export const filterPropList = {
+  exact: function (list: string[]) {
     return list.filter(function (m) {
         return m.match(/^[^\*\!]+$/);
     });
   },
-  contain: function (list) {
+  contain: function (list: string[]) {
     return list.filter(function (m) {
         return m.match(/^\*.+\*$/);
     }).map(function (m) {
         return m.substr(1, m.length - 2);
     });
   },
-  endWith: function (list) {
+  endWith: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^\*[^\*]+$/);
     }).map(function (m) {
       return m.substr(1);
     });
   },
-  startWith: function (list) {
+  startWith: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^[^\*\!]+\*$/);
     }).map(function (m) {
       return m.substr(0, m.length - 1);
     });
   },
-  notExact: function (list) {
+  notExact: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^\![^\*].*$/);
     }).map(function (m) {
       return m.substr(1);
     });
   },
-  notContain: function (list) {
+  notContain: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^\!\*.+\*$/);
     }).map(function (m) {
       return m.substr(2, m.length - 3);
     });
   },
-  notEndWith: function (list) {
+  notEndWith: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^\!\*[^\*]+$/);
     }).map(function (m) {
       return m.substr(2);
     });
   },
-  notStartWith: function (list) {
+  notStartWith: function (list: string[]) {
     return list.filter(function (m) {
       return m.match(/^\![^\*]+\*$/);
     }).map(function (m) {
@@ -55,10 +55,10 @@ var filterPropList = {
   }
 };
 
-function createPropListMatcher(propList) {
-  var hasWild = propList.indexOf('*') > -1;
-  var matchAll = (hasWild && propList.length === 1);
-  var lists = {
+export function createPropListMatcher(propList: string[]) {
+  const hasWild = propList.indexOf('*') > -1;
+  const matchAll = (hasWild && propList.length === 1);
+  const lists = {
     exact: filterPropList.exact(propList),
     contain: filterPropList.contain(propList),
     startWith: filterPropList.startWith(propList),
@@ -68,7 +68,7 @@ function createPropListMatcher(propList) {
     notStartWith: filterPropList.notStartWith(propList),
     notEndWith: filterPropList.notEndWith(propList)
   };
-  return function (prop) {
+  return function (prop: string) {
     if (matchAll) return true;
     return (
       (
@@ -99,8 +99,3 @@ function createPropListMatcher(propList) {
     );
   };
 }
-
-module.exports = {
-  filterPropList,
-  createPropListMatcher
-};
