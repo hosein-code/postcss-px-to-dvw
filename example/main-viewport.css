@@ -1,13 +1,113 @@
 /* simple comment */
-.rule {
-  font-size: 15vw;
-  width: 100vw;
-  height: 50vw;
+
+.class {
+  margin: 1.33333vw .5vh;
+  padding: 5vmin 1.26667vw 1px;
+  border: 0.4vw solid black;
+  border-bottom-width: 1px;
+  font-size: 1.86667vw;
+  line-height: 2.66667vw;
+}
+.class2 {
+  border: 1px solid black;
+  margin-bottom: 1px;
+  font-size: 2.66667vw;
+  line-height: 4vw;
+}
+@media (min-width: 750px) {
+  .class3 {
+    font-size: 2.66667vw;
+    /* viewport-width: 750 */
+    line-height: 2.66667vw;
+  }
+}
+
+.class4-ignore::before {
+  content: '';
+  width: 10px;
+  padding: 1.33333vw;
+  height: 10px;
+  border: solid 2px #000;
+}
+.class5-bad-ignore {
+  /* px-to-viewport-ignore */
+  width: 1.33333vw;
+  /* px-to-viewport-ignore */
+  height: 1.33333vw;
+  /* px-to-viewport-ignore-next */
+}
+.class6 {
+  margin: 2.66667vw .5vh;
+  padding: 5vmin 2.53333vw 1px;
+  border: 0.8vw solid black;
+  border-bottom-width: 1px;
+  font-size: 3.73333vw;
+  line-height: 5.33333vw;
+}
+
+@keyframes move {
+  0% {
+    transform: translate(0, 0);
+  }
+  /* px-to-viewport-ignore-next */
+  50% {
+    transform: translate(2.66667vw, -2.66667vw);
+  }
+  100% {
+    transform: translate(10px, -10px);
+  }
+}
+
+/*
+.class {
+    font-size: 16px;
+}
+*/
+.class7 {
+  width: 2.66667vw;
+  padding: 2.66667vw;
+  height: 2.66667vw;
+  border: solid 0.53333vw #000;
 }
 @media (orientation: landscape) {
-.rule {
-  font-size: 15vw;
-  width: 100vw;
-  height: 50vw;
+
+.class {
+  margin: 0.52083vw .5vh;
+  padding: 5vmin 0.49479vw 1px;
+  border: 0.15625vw solid black;
+  border-bottom-width: 1px;
+  font-size: 0.72917vw;
+  line-height: 1.04167vw;
+}
+.class2 {
+  border: 1px solid black;
+  margin-bottom: 1px;
+  font-size: 1.04167vw;
+  line-height: 1.5625vw;
+}
+
+.class4-ignore::before {
+  width: 0.52083vw;
+  padding: 0.52083vw;
+  height: 0.52083vw;
+  border: solid 0.10417vw #000;
+}
+.class5-bad-ignore {
+  width: 0.52083vw;
+  height: 0.52083vw;
+}
+.class6 {
+  margin: 1.33333vw .5vh;
+  padding: 5vmin 1.26667vw 1px;
+  border: 0.4vw solid black;
+  border-bottom-width: 1px;
+  font-size: 1.86667vw;
+  line-height: 2.66667vw;
+}
+.class7 {
+  width: 1.33333vw;
+  padding: 1.33333vw;
+  height: 1.33333vw;
+  border: solid 0.26667vw #000;
 }
 }

@@ -98,7 +98,7 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
     if (!nearestLandscapeComment) {
       const index = r.parent.nodes.findIndex(item => item === r)
       // 从后往前找
-      for(let i = commentList.landscape.length - 1; i >= 0; i++) {
+      for(let i = commentList.landscape.length - 1; i >= 0; i--) {
         if (commentList.landscape[i].index < index) {
           nearestLandscapeComment = commentList.landscape[i].node
           break
@@ -109,7 +109,7 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
     if (!nearestViewPortComment) {
       const index = r.parent.nodes.findIndex(item => item === r)
       // 从后往前找
-      for(let i = commentList.viewport.length - 1; i >= 0; i++) {
+      for(let i = commentList.viewport.length - 1; i >= 0; i--) {
         if (commentList.viewport[i].index < index) {
           nearestViewPortComment = commentList.viewport[i].node
           break

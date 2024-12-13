@@ -71,3 +71,11 @@
     font-size: 16px;
 }
 */
+
+/* viewport-width: 375 */
+.class7 {
+  width: 10px;
+  padding: 10px;
+  height: 10px;
+  border: solid 2px #000;
+}
