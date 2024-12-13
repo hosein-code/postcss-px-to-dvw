@@ -29,11 +29,10 @@ const defaults: PostcssPxToViewportOptions = {
 const ignoreNextComment = "px-to-viewport-ignore-next";
 const ignorePrevComment = "px-to-viewport-ignore";
 
-
-// 通过注释动态修改with宽度
-// 解析到的宽度，到下一个注释之前，rule都修改为动态宽度
 const landscapeWidthCommentRegx = /landscape-width:\s*(\d+)$/;
 const viewPortWidthCommentRegx = /viewport-width:\s*(\d+)/;
+// 缓存节点的动态注释
+const cacheDynamicComment = new Map<ChildNode, Array<Comment | undefined>>();
 
 function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
   const opts: PostcssPxToViewportOptions = Object.assign({}, defaults, options);
@@ -43,96 +42,59 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
 
   const pxRegex = getUnitRegexp(opts.unitToConvert);
   const satisfyPropList = createPropListMatcher(opts.propList);
-
-  let dynamicLandscapeWidth = opts.landscapeWidth;
-  let dynamicViewPortWidth = opts.viewportWidth;
-  let cacheComment = new Map<ContainerWithChildren<ChildNode>, {
-    landscape: { index: number, node: Comment }[],
-    viewport: { index: number, node: Comment }[],
-  }>() // 缓存注释节点
-  
   const landscapeRules: Rule[] = [];
-  
-  const checkViewportWidthComment = (node: ChildNode): node is Comment => {
-    return node.type === "comment" && viewPortWidthCommentRegx.test(node.text)
-  }
-  const checkLandscapeWidthComment = (node: ChildNode): node is Comment => {
-    return node.type === "comment" && landscapeWidthCommentRegx.test(node.text)
-  }
 
-  // 注释过滤
-  const filterComment = (r:ChildNode[], filter: (node: ChildNode) => node is Comment) => {
-    let result = []
-    for (let i = 0; i < r.length; i++) {
-      const node = r[i]
-      if (filter(node)) {
-        result.push({ index: i, node })
+  // 查找最近注释，从父节点获取全部子节点，
+  // 遍历所有子节点，此节点之前的注释即为最近注释
+  // 如果同级没有注释，则从缓存中获取，缓存中为父节点的最近注释
+  let nearestLandscapeComment: Comment | undefined = undefined;
+  let nearestViewPortComment: Comment | undefined = undefined;
+  function findNearestComment(r: Rule) {
+    // 如果当前节点没有父节点，则返回空数组
+    if (!r.parent) return [];
+    // 如果已处理过，直接返回缓存结果
+    if (cacheDynamicComment.get(r)) {
+      return cacheDynamicComment.get(r);
+    }
+
+    // 预处理所有节点的动态注释宽度
+    // 如果检测到最新动态宽度注释，则更新注释
+    // 如果当前节点不是注释，则绑定释节点
+    for (let i = 0; i < r.parent.nodes.length; i++) {
+      const node = r.parent.nodes[i];
+      if (checkLandscapeWidthComment(node)) {
+        nearestLandscapeComment = node;
+      } else if (checkViewportWidthComment(node)) {
+        nearestViewPortComment = node;
+      } else {
+        // 如果不是注释节点，则记录当前节点之前最近的动态注释节点
+        !checkComment(node) &&
+          cacheDynamicComment.set(node, [
+            nearestLandscapeComment,
+            nearestViewPortComment,
+          ]);
       }
     }
-    return result
+    return cacheDynamicComment.get(r);
   }
-
-  // 查找最近注释
-  const findNearestComment = (r: Rule) => {
-    let nearestLandscapeComment: Comment | undefined = undefined;
-    let nearestViewPortComment: Comment | undefined = undefined;
-    // 从前一个节点去找，如果前一个节点是注释，则优先使用前一个节点
-    const pre = r.prev()
-    if (pre && checkLandscapeWidthComment(pre)) {
-      nearestLandscapeComment = pre
-    } else if (pre && checkViewportWidthComment(pre)) {
-      nearestViewPortComment = pre
-    }
-
-    // 如果没有父节点直接返回上一步结果
-    if (!r.parent) return [nearestLandscapeComment, nearestViewPortComment]
-
-    const commentList = cacheComment.get(r.parent) || {
-      landscape: filterComment(r.parent.nodes, checkLandscapeWidthComment),
-      viewport: filterComment(r.parent.nodes, checkViewportWidthComment),
-    }
-    // 缓存注释节点
-    !cacheComment.get(r.parent) && cacheComment.set(r.parent, commentList)
-
-
-    if (!nearestLandscapeComment) {
-      const index = r.parent.nodes.findIndex(item => item === r)
-      // 从后往前找
-      for(let i = commentList.landscape.length - 1; i >= 0; i--) {
-        if (commentList.landscape[i].index < index) {
-          nearestLandscapeComment = commentList.landscape[i].node
-          break
-        }
-      }
-    }
-
-    if (!nearestViewPortComment) {
-      const index = r.parent.nodes.findIndex(item => item === r)
-      // 从后往前找
-      for(let i = commentList.viewport.length - 1; i >= 0; i--) {
-        if (commentList.viewport[i].index < index) {
-          nearestViewPortComment = commentList.viewport[i].node
-          break
-        }
-      }
-    }
-
-    return [nearestLandscapeComment, nearestViewPortComment]
-  }
-  
-  // 更新宽度，到下一个注释之前，rule都修改为动态宽度
-  const updateDynamicWidth = (r: Rule) => {
-    const [landscapeComment, viewPortComment] = findNearestComment(r)
+  // 获取当前rule的动态宽度
+  function getDynamicWidth(r: Rule) {
+    let dynamicLandscapeWidth, dynamicViewPortWidth;
+    const [landscapeComment, viewPortComment] = findNearestComment(r) || [];
     if (landscapeComment) {
-      const [_, width] = landscapeWidthCommentRegx.exec(landscapeComment.text) || [];
+      const [_, width] =
+        landscapeWidthCommentRegx.exec(landscapeComment.text) || [];
       dynamicLandscapeWidth = Number(width) ?? dynamicLandscapeWidth;
     }
 
     if (viewPortComment) {
-      const [_, width] = viewPortWidthCommentRegx.exec(viewPortComment.text) || [];
+      const [_, width] =
+        viewPortWidthCommentRegx.exec(viewPortComment.text) || [];
       dynamicViewPortWidth = Number(width) ?? dynamicViewPortWidth;
     }
+    return [dynamicLandscapeWidth, dynamicViewPortWidth];
   }
+
   return {
     postcssPlugin: "postcss-px-to-viewport",
     Once(root: Root) {
@@ -142,13 +104,19 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
         const file = rule.source && rule.source.input.file;
 
         // 不存在include中 则忽略
-        if (opts.include && file && !checkIncludeFile(opts.include, file)) return
+        if (opts.include && file && !checkIncludeFile(opts.include, file))
+          return;
         // 存在include中 则忽略
-        if (opts.exclude && file && checkExcludeFile(opts.exclude, file)) return
+        if (opts.exclude && file && checkExcludeFile(opts.exclude, file))
+          return;
         // 存在选择器黑名单中则忽略
         if (blacklistedSelector(opts.selectorBlackList, rule.selector)) return;
-        
-        updateDynamicWidth(r)
+
+        // 获取动态注释宽度，如果不存在则使用默认值
+        const [
+          dynamicLandscapeWidth = opts.landscapeWidth,
+          dynamicViewPortWidth = opts.viewportWidth,
+        ] = getDynamicWidth(r);
 
         // 当前rule在横屏模式下的转换
         if (opts.landscape && !rule.parent?.params) {
@@ -163,7 +131,11 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
               decl.clone({
                 value: decl.value.replace(
                   pxRegex,
-                  createPxReplace(opts, opts.landscapeUnit, dynamicLandscapeWidth)
+                  createPxReplace(
+                    opts,
+                    opts.landscapeUnit,
+                    dynamicLandscapeWidth
+                  )
                 ),
               })
             );
@@ -262,22 +234,27 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
         });
         root.append(landscapeRoot);
       }
-      
+
       // 删除注释节点
-      cacheComment.forEach(function (comment) {
-        comment.landscape.forEach(l => l.node.remove());
-        comment.viewport.forEach(p => p.node.remove());
-      })
+      cacheDynamicComment.forEach(function (comment) {
+        comment.forEach((c) => c?.remove());
+      });
     },
   };
 }
 
-function checkIncludeFile(include: PostcssPxToViewportOptions['include'], file: string) {
+function checkIncludeFile(
+  include: PostcssPxToViewportOptions["include"],
+  file: string
+) {
   if (isRegExp(include)) return include.test(file);
   if (Array.isArray(include)) return include.some((i) => i.test(file));
 }
 
-function checkExcludeFile(exclude: PostcssPxToViewportOptions['exclude'], file: string) {
+function checkExcludeFile(
+  exclude: PostcssPxToViewportOptions["exclude"],
+  file: string
+) {
   if (isRegExp(exclude)) return exclude.test(file);
   if (Array.isArray(exclude)) return exclude.some((i) => i.test(file));
 }
@@ -317,7 +294,7 @@ function checkRegExpOrArray(
   if (!option) return;
   if (isRegExp(option)) return;
   if (isArray(option)) {
-    const bad = option.some(item => !isRegExp(item))
+    const bad = option.some((item) => !isRegExp(item));
     if (!bad) return;
   }
   throw new Error(
@@ -352,6 +329,18 @@ function declarationExists(
 
 function validateParams(params: string | undefined, mediaQuery: boolean) {
   return !params || (params && mediaQuery);
+}
+
+function checkViewportWidthComment(node: ChildNode): node is Comment {
+  return node.type === "comment" && viewPortWidthCommentRegx.test(node.text);
+}
+
+function checkLandscapeWidthComment(node: ChildNode): node is Comment {
+  return node.type === "comment" && landscapeWidthCommentRegx.test(node.text);
+}
+
+function checkComment(node: ChildNode): node is Comment {
+  return node.type === "comment";
 }
 
 export default postcssPxToViewport;
