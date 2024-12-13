@@ -173,6 +173,9 @@ Example:
 }
 ```
 
+There are several more reasons why your pixels may not convert, the following options may affect this:
+`propList`, `selectorBlackList`, `minPixelValue`, `mediaQuery`, `exclude`, `include`.
+
 #### viewport-width & landscape-width
 You can use special comments for dynamic set viewport width and lanscape width:
 - `/* viewport-width: number */` — on a separate line before the rule, dynamic set viewprot width by your comment.
@@ -198,9 +201,6 @@ Example:
 }
 ```
 
-There are several more reasons why your pixels may not convert, the following options may affect this:
-`propList`, `selectorBlackList`, `minPixelValue`, `mediaQuery`, `exclude`, `include`.
-
 #### Use with PostCss configuration file
 
 add to your `postcss.config.js`
@@ -215,11 +215,6 @@ module.exports = {
 }
 ```
 
-## Contributing
-
-Please read [Code of Conduct](CODE-OF-CONDUCT.md)
-and [Contributing Guidelines](CONTRIBUTING.md) for submitting pull requests to us.
-
 ## Running the tests
 
 In order to run tests, you need to install dev-packages:
@@ -231,13 +226,9 @@ Then run the tests via npm script:
 $ npm run test
 ```
 
-## Changelog
-
-The changelog is [here](CHANGELOG.md).
-
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/evrone/postcss-px-to-viewport/tags). 
+We use [SemVer](http://semver.org/) for versioning. 
 
 
 ## License
