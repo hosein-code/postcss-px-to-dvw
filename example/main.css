@@ -1,4 +1,7 @@
 /* viewport-width: 750 */
+/* simple comment */
+/* landscape-width: 1920 */
+
 .class {
   margin: 10px .5vh;
   padding: 5vmin 9.5px 1px;
@@ -40,6 +43,7 @@
 
 
 /* viewport-width: 375 */
+/* landscape-width: 750 */
 .class6 {
   margin: 10px .5vh;
   padding: 5vmin 9.5px 1px;

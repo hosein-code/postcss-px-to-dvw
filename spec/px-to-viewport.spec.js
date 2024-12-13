@@ -637,3 +637,53 @@ describe('/* px-to-viewport-ignore */ & /* px-to-viewport-ignore-next */', funct
     expect(processed).toBe(expected);
   });
 });
+
+describe('/* viewport-width */ & /* landscape-width */', function() {
+  it('should replace using viewportWidth from comment', function() {
+    var css = `/* simple comment */ /* viewport-width: 100 */ .rule { font-size: 15px; width: 100px; height: 50px; }`;
+    var expected = `/* simple comment */ .rule { font-size: 15vw; width: 100vw; height: 50vw; }`;
+
+    var processed = postcss(pxToViewport()).process(css).css;
+
+    expect(processed).toBe(expected);
+  });
+
+  it('should replace using viewportWidth from comment', function() {
+    var css = `/* simple comment */\n/* viewport-width: 100 */\n.rule { font-size: 15px; width: 100px; height: 50px; }`;
+    var expected = `/* simple comment */\n.rule { font-size: 15vw; width: 100vw; height: 50vw; }`;
+    var processed = postcss(pxToViewport()).process(css).css;
+    expect(processed).toBe(expected);
+  });
+
+  it('should replace using landscapeWidth from comment', function() {
+    var css = `/* simple comment */ /* landscape-width: 100 */ .rule { font-size: 15px; width: 100px; height: 50px; }`;
+    var expected = `/* simple comment */ .rule { font-size: 4.6875vw; width: 31.25vw; height: 15.625vw; } @media (orientation: landscape) { .rule { font-size: 15vw; width: 100vw; height: 50vw; } }`;
+    var processed = postcss(pxToViewport({
+      landscape: true,
+      landscapeUnit: 'vw',
+      landscapeWidth: 750,
+    })).process(css).css;
+    expect(processed).toBe(expected);
+  });
+
+
+  it('should replace using landscapeWidth and viewportWidth from comment', function() {
+    var css = `/* viewport-width: 100 */\n/* simple comment */\n/* landscape-width: 100 */\n.rule {\n  font-size: 15px;\n  width: 100px;\n  height: 50px;\n}`;
+    var expected = `/* simple comment */\n.rule {\n  font-size: 15vw;\n  width: 100vw;\n  height: 50vw;\n}\n@media (orientation: landscape) {\n.rule {\n  font-size: 15vw;\n  width: 100vw;\n  height: 50vw;\n}\n}`;
+    var processed = postcss(pxToViewport({
+      landscape: true,
+      landscapeUnit: 'vw',
+      landscapeWidth: 750,
+    })).process(css).css;
+    expect(processed).toBe(expected);
+  });
+
+  // it('should ignore before-commented in multiline-css', function() {
+  //   var css = '.rule {\n  font-size: 15px;\n  /*px-to-viewport-ignore-next*/\n  width: 100px;\n  /*px-to-viewport-ignore*/\n  height: 50px;\n}';
+  //   var expected = '.rule {\n  font-size: 4.6875vw;\n  width: 100px;\n  /*px-to-viewport-ignore*/\n  height: 15.625vw;\n}';
+
+  //   var processed = postcss(pxToViewport()).process(css).css;
+
+  //   expect(processed).toBe(expected);
+  // });
+});
