@@ -239,6 +239,7 @@ function postcssPxToViewport(options?: Partial<PostcssPxToViewportOptions>) {
       cacheDynamicComment.forEach(function (comment) {
         comment.forEach((c) => c?.remove());
       });
+      cacheDynamicComment.clear();
     },
   };
 }
